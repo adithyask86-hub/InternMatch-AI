@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — InternMatch AI{% endblock %}
+
+{% block content %}
+<div class="page-container" id="dashboard-page">
+
+  <!-- ── Hero Greeting ── -->
+  <div class="dashboard-hero glass-card">
+    <div class="hero-content">
+      <div class="hero-greeting">
+        <span class="greeting-badge">👋 Welcome back</span>
+        <h1 class="page-title">Hello, <span class="gradient-text">{{ user.name.split()[0] }}</span></h1>
+        <p class="page-subtitle">
+          {% if skills %}
+            Your profile has <strong>{{ skills|length }} skills</strong> detected.
+            Let AI find your best internship match.
+          {% else %}
+            Upload your resume to unlock AI-powered recommendations.
+          {% endif %}
+        </p>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <div class="stat-number gradient-text">{{ skills|length }}</div>
+          <div class="stat-label">Skills Detected</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number gradient-text">{{ bookmarks|length }}</div>
+          <div class="stat-label">Bookmarks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number gradient-text">{{ user.experience_level|title }}</div>
+          <div class="stat-label">Level</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-orb"></div>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- ── Resume Upload ── -->
+    <div class="glass-card card-upload" id="upload-card">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span class="card-icon">📄</span> Resume Upload
+        </h2>
+        <p class="card-desc">Upload your CV to extract skills and get personalised matches.</p>
+      </div>
+
+      <!-- Drag and Drop Area -->
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-icon" id="drop-icon">⬆</div>
+        <p class="drop-title" id="drop-title">Drag & drop your resume</p>
+        <p class="drop-sub">PDF or TXT · Max 5 MB</p>
+        <input type="file" id="resume-file" accept=".pdf,.txt" class="hidden" />
+        <button class="btn btn-outline mt-sm" onclick="document.getElementById('resume-file').click()">
+          Browse Files
+        </button>
+      </div>
+
+      <!-- Paste Text Option -->
+      <div class="paste-section">
+        <button class="btn-link" id="toggle-paste-btn" onclick="togglePaste()">
+          Or paste resume text instead ▾
+        </button>
+        <div id="paste-area" class="hidden">
+          <textarea id="resume-text-input" class="form-textarea"
+            placeholder="Paste your resume text here…" rows="6"></textarea>
+          <button class="btn btn-outline" onclick="submitTextResume()">Analyze Text</button>
+        </div>
+      </div>
+
+      <!-- Results area -->
+      <div id="upload-result" class="hidden">
+        <div class="divider"></div>
+        <div class="skills-result">
+          <div class="result-header">
+            <span class="result-icon">✓</span>
+            <div>
+              <h3 class="result-title">Skills Extracted</h3>
+              <p class="result-sub" id="result-subtitle"></p>
+            </div>
+          </div>
+          <div class="skills-cloud" id="skills-cloud"></div>
+          <div class="result-actions">
+            <a href="{{ url_for('results') }}" class="btn btn-primary">
+              View Matched Internships →
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="upload-loading" class="loading-state hidden">
+        <div class="spinner"></div>
+        <p>Analyzing your resume with AI…</p>
+      </div>
+    </div>
+
+    <!-- ── Quick AI Chat ── -->
+    <div class="glass-card card-quick-chat">
+      <div class="card-header">
+        <h2 class="card-title"><span class="card-icon">◎</span> Quick AI Search</h2>
+        <p class="card-desc">Describe what you're looking for in natural language.</p>
+      </div>
+      <div class="quick-suggestions">
+        <button class="suggestion-chip" onclick="sendQuick(this)">Find AI internships for beginners</button>
+        <button class="suggestion-chip" onclick="sendQuick(this)">Goldman Sachs finance internship</button>
+        <button class="suggestion-chip" onclick="sendQuick(this)">Remote software engineering intern</button>
+        <button class="suggestion-chip" onclick="sendQuick(this)">UI/UX design at Meta</button>
+      </div>
+      <a href="{{ url_for('chat') }}" class="btn btn-primary btn-full">
+        Open Full AI Chat →
+      </a>
+    </div>
+
+    <!-- ── Skills Panel ── -->
+    {% if skills %}
+    <div class="glass-card card-skills">
+      <div class="card-header">
+        <h2 class="card-title"><span class="card-icon">⚡</span> Your Skills</h2>
+        <span class="badge badge-primary">{{ skills|length }} detected</span>
+      </div>
+      <div class="skills-cloud">
+        {% for skill in skills %}
+          <span class="skill-tag">{{ skill }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Bookmarks ── -->
+    {% if bookmarks %}
+    <div class="glass-card card-bookmarks">
+      <div class="card-header">
+        <h2 class="card-title"><span class="card-icon">📌</span> Bookmarked</h2>
+        <span class="badge badge-secondary">{{ bookmarks|length }}</span>
+      </div>
+      <div class="bookmark-list">
+        {% for b in bookmarks %}
+        <div class="bookmark-item">
+          <div class="company-dot" style="background: {{ b.logo_color }}"></div>
+          <div class="bookmark-info">
+            <span class="bookmark-title">{{ b.title }}</span>
+            <span class="bookmark-company">{{ b.company }}</span>
+          </div>
+          <span class="bookmark-domain domain-{{ b.domain }}">{{ b.domain }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      <a href="{{ url_for('results') }}" class="btn-link mt-sm">View all internships →</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Drag & Drop ──
+const dropZone = document.getElementById("drop-zone");
+const fileInput = document.getElementById("resume-file");
+
+dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
+dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-over");
+  const file = e.dataTransfer.files[0];
+  if (file) handleFileUpload(file);
+});
+fileInput.addEventListener("change", e => {
+  if (e.target.files[0]) handleFileUpload(e.target.files[0]);
+});
+
+function handleFileUpload(file) {
+  const allowed = ["application/pdf", "text/plain"];
+  if (!allowed.includes(file.type) && !file.name.match(/\.(pdf|txt)$/i)) {
+    showToast("Only PDF and TXT files are supported.", "error"); return;
+  }
+  document.getElementById("upload-loading").classList.remove("hidden");
+  document.getElementById("drop-zone").classList.add("hidden");
+
+  const formData = new FormData();
+  formData.append("resume", file);
+
+  fetch("{{ url_for('upload_resume') }}", { method: "POST", body: formData })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("upload-loading").classList.add("hidden");
+      if (data.error) { showToast(data.error, "error"); document.getElementById("drop-zone").classList.remove("hidden"); return; }
+      showSkillResults(data);
+    })
+    .catch(() => {
+      document.getElementById("upload-loading").classList.add("hidden");
+      document.getElementById("drop-zone").classList.remove("hidden");
+      showToast("Upload failed. Please try again.", "error");
+    });
+}
+
+function submitTextResume() {
+  const text = document.getElementById("resume-text-input").value.trim();
+  if (!text) { showToast("Please paste some resume text first.", "warning"); return; }
+  document.getElementById("upload-loading").classList.remove("hidden");
+  document.getElementById("paste-area").classList.add("hidden");
+
+  fetch("{{ url_for('upload_resume') }}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text })
+  })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("upload-loading").classList.add("hidden");
+      if (data.error) { showToast(data.error, "error"); return; }
+      showSkillResults(data);
+    });
+}
+
+function showSkillResults(data) {
+  document.getElementById("upload-result").classList.remove("hidden");
+  document.getElementById("result-subtitle").textContent =
+    `Found ${data.skill_count} skills · ${data.experience_level} level`;
+  const cloud = document.getElementById("skills-cloud");
+  cloud.innerHTML = data.skills.map(s => `<span class="skill-tag skill-tag-new">${s}</span>`).join("");
+  // Animate tags in
+  cloud.querySelectorAll(".skill-tag-new").forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.05}s`;
+  });
+}
+
+function togglePaste() {
+  const area = document.getElementById("paste-area");
+  area.classList.toggle("hidden");
+}
+
+function sendQuick(btn) {
+  const query = btn.textContent;
+  sessionStorage.setItem("chat_prefill", query);
+  window.location.href = "{{ url_for('chat') }}";
+}
+</script>
+{% endblock %}

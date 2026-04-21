@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Internship Results — InternMatch AI{% endblock %}
+
+{% block content %}
+<div class="page-container" id="results-page">
+
+  <!-- ── Page Header ── -->
+  <div class="results-header">
+    <div>
+      <h1 class="page-title">Your <span class="gradient-text">Matches</span></h1>
+      <p class="page-subtitle">
+        {% if skills %}
+          Based on your <strong>{{ skills|length }} detected skills</strong> · {{ internships|length }} internships found
+        {% else %}
+          Browse all available internships · Upload your resume for personalised matches
+        {% endif %}
+      </p>
+    </div>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-outline">↑ Update Resume</a>
+  </div>
+
+  <!-- ── Filter Bar ── -->
+  <div class="filter-bar glass-card">
+    <div class="filter-scroll">
+      <button class="filter-chip active" data-domain="all" onclick="filterResults(this)">All</button>
+      <button class="filter-chip" data-domain="software" onclick="filterResults(this)">💻 Software</button>
+      <button class="filter-chip" data-domain="ai" onclick="filterResults(this)">🧠 AI/ML</button>
+      <button class="filter-chip" data-domain="data" onclick="filterResults(this)">📊 Data</button>
+      <button class="filter-chip" data-domain="finance" onclick="filterResults(this)">💰 Finance</button>
+      <button class="filter-chip" data-domain="design" onclick="filterResults(this)">🎨 Design</button>
+      <button class="filter-chip" data-domain="cloud" onclick="filterResults(this)">☁️ Cloud</button>
+      <button class="filter-chip" data-domain="marketing" onclick="filterResults(this)">📣 Marketing</button>
+    </div>
+    <div class="sort-wrapper">
+      <select class="sort-select" id="sort-select" onchange="sortResults(this.value)">
+        <option value="match">Sort: Best Match</option>
+        <option value="stipend">Sort: Stipend</option>
+        <option value="company">Sort: Company</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ── Results Grid ── -->
+  <div class="internship-grid" id="internship-grid">
+    {% for intern in internships %}
+    <div class="internship-card glass-card"
+         data-domain="{{ intern.domain }}"
+         data-score="{{ intern.match_score }}"
+         data-id="{{ intern.id }}"
+         id="card-{{ intern.id }}">
+
+      <!-- Card Top -->
+      <div class="card-top">
+        <div class="company-logo" style="background: {{ intern.logo_color }}20; border: 1px solid {{ intern.logo_color }}40;">
+          <span class="company-initial" style="color: {{ intern.logo_color }}">{{ intern.company[0] }}</span>
+        </div>
+        <div class="card-meta">
+          <span class="domain-tag domain-{{ intern.domain }}">{{ intern.domain }}</span>
+          <button class="bookmark-btn {% if intern.id in bookmarked_ids %}bookmarked{% endif %}"
+                  id="bm-{{ intern.id }}"
+                  onclick="toggleBookmark({{ intern.id }})"
+                  title="Bookmark">
+            {% if intern.id in bookmarked_ids %}📌{% else %}🔖{% endif %}
+          </button>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="card-body">
+        <h3 class="intern-title">{{ intern.title }}</h3>
+        <p class="intern-company">{{ intern.company }}</p>
+
+        <div class="intern-details">
+          <span class="detail-chip">📍 {{ intern.location }}</span>
+          <span class="detail-chip">⏱ {{ intern.duration }}</span>
+          <span class="detail-chip stipend-chip">💵 {{ intern.stipend }}</span>
+        </div>
+
+        <p class="intern-desc">{{ intern.description[:120] }}{% if intern.description|length > 120 %}…{% endif %}</p>
+
+        <!-- Required Skills -->
+        <div class="skills-row">
+          {% for skill in intern.required_skills[:4] %}
+            <span class="skill-mini {% if skill in skills %}skill-match{% endif %}">{{ skill }}</span>
+          {% endfor %}
+          {% if intern.required_skills|length > 4 %}
+            <span class="skill-mini skill-more">+{{ intern.required_skills|length - 4 }}</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Match Score Footer -->
+      <div class="card-footer">
+        <div class="match-score-wrapper">
+          <div class="match-ring-container">
+            <svg class="match-ring" viewBox="0 0 36 36">
+              <circle class="ring-bg" cx="18" cy="18" r="15.9" />
+              <circle class="ring-fill" cx="18" cy="18" r="15.9"
+                style="stroke: {{ intern.logo_color }};
+                       stroke-dasharray: {{ intern.match_score }} {{ 100 - intern.match_score }};" />
+            </svg>
+            <span class="match-percent" style="color: {{ intern.logo_color }}">{{ intern.match_score|int }}%</span>
+          </div>
+          <span class="match-label">Match</span>
+        </div>
+
+        <button class="btn btn-primary btn-sm" onclick="showSuggestions({{ intern.id }})">
+          View Tips
+        </button>
+      </div>
+
+      <!-- Suggestions Panel (hidden by default) -->
+      <div class="suggestions-panel hidden" id="sug-{{ intern.id }}">
+        <div class="sug-header">
+          <span>💡 AI Suggestions</span>
+          <button onclick="hideSuggestions({{ intern.id }})">✕</button>
+        </div>
+        <ul class="sug-list">
+          {% for sug in intern.suggestions %}
+            <li class="sug-item">{{ sug }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No internships found</h3>
+      <p>Try uploading your resume or adjusting your filters.</p>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Upload Resume</a>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const bookmarkedIds = new Set({{ bookmarked_ids | tojson }});
+
+function filterResults(btn) {
+  document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+  btn.classList.add("active");
+  const domain = btn.dataset.domain;
+  document.querySelectorAll(".internship-card").forEach(card => {
+    const show = domain === "all" || card.dataset.domain === domain;
+    card.style.display = show ? "" : "none";
+  });
+}
+
+function sortResults(value) {
+  const grid = document.getElementById("internship-grid");
+  const cards = Array.from(grid.querySelectorAll(".internship-card"));
+  cards.sort((a, b) => {
+    if (value === "match") return parseFloat(b.dataset.score) - parseFloat(a.dataset.score);
+    if (value === "company") {
+      const ca = a.querySelector(".intern-company").textContent;
+      const cb = b.querySelector(".intern-company").textContent;
+      return ca.localeCompare(cb);
+    }
+    return 0;
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+
+function toggleBookmark(id) {
+  fetch("{{ url_for('toggle_bookmark') }}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ internship_id: id })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const btn = document.getElementById(`bm-${id}`);
+    if (data.bookmarked) {
+      btn.innerHTML = "📌"; btn.classList.add("bookmarked");
+      showToast("Bookmarked! 📌", "success");
+    } else {
+      btn.innerHTML = "🔖"; btn.classList.remove("bookmarked");
+      showToast("Bookmark removed.", "info");
+    }
+  });
+}
+
+function showSuggestions(id) {
+  document.querySelectorAll(".suggestions-panel").forEach(p => p.classList.add("hidden"));
+  document.getElementById(`sug-${id}`).classList.remove("hidden");
+}
+
+function hideSuggestions(id) {
+  document.getElementById(`sug-${id}`).classList.add("hidden");
+}
+</script>
+{% endblock %}

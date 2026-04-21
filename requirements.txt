@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic[email]
+pypdf
+scikit-learn
+python-multipart
+jinja2
+python-dotenv

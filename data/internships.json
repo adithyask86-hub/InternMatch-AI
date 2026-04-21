@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "title": "Software Engineering Intern",
+    "company": "TechNova Solutions",
+    "location": "San Francisco, CA (Remote)",
+    "category": "Technology",
+    "description": "Looking for a passionate developer to work on our core AI platform. You will build scalable microservices and optimize frontend performance.",
+    "skills": ["Python", "JavaScript", "React", "FastAPI", "SQL"],
+    "eligibility": "B.S. in Computer Science or related field.",
+    "benefits": "Mentorship, Competitive Stipend, Path to Full-time",
+    "match_criteria": ["Python", "React", "Machine Learning"]
+  },
+  {
+    "id": 2,
+    "title": "Investment Banking Analyst Intern",
+    "company": "Goldman Sachs",
+    "location": "New York, NY",
+    "category": "Finance",
+    "description": "Assist in financial modeling, market research, and client presentations. High-paced environment requiring strong analytical skills.",
+    "skills": ["Excel", "Financial Modeling", "PowerPoint", "Accounting", "Data Analysis"],
+    "eligibility": "Junior or Senior in Finance, Economics, or Business.",
+    "benefits": "Networking, Global Exposure, High Stipend",
+    "match_criteria": ["Finance", "Excel", "Analysis"]
+  },
+  {
+    "id": 3,
+    "title": "AI Research Intern",
+    "company": "DeepMind",
+    "location": "London, UK (Hybrid)",
+    "category": "AI/ML",
+    "description": "Join our research team to explore new frontiers in reinforcement learning and natural language processing.",
+    "skills": ["Python", "PyTorch", "TensorFlow", "NLP", "Mathematics"],
+    "eligibility": "M.S. or Ph.D. in AI, CS, or Physics.",
+    "benefits": "Cutting-edge Research, Free Meals, Relocation Support",
+    "match_criteria": ["AI", "NLP", "PyTorch"]
+  },
+  {
+    "id": 4,
+    "title": "Product Design Intern",
+    "company": "Apple",
+    "location": "Cupertino, CA",
+    "category": "Design",
+    "description": "Craft beautiful user experiences for the next generation of mobile applications. Focus on accessibility and aesthetics.",
+    "skills": ["Figma", "Sketch", "UI/UX", "Adobe XD", "Prototyping"],
+    "eligibility": "Portfolio demonstrating strong design principles.",
+    "benefits": "Design Mentorship, Creative Environment",
+    "match_criteria": ["Design", "UI", "UX", "Figma"]
+  },
+  {
+    "id": 5,
+    "title": "Marketing & Strategy Intern",
+    "company": "Google",
+    "location": "Mountain View, CA",
+    "category": "Marketing",
+    "description": "Analyze market trends and help execute global marketing campaigns for Cloud products.",
+    "skills": ["Google Ads", "SEO", "Content Writing", "Analytics", "Communication"],
+    "eligibility": "Enrolled in a Marketing or Communications degree.",
+    "benefits": "Perks, World-class Training",
+    "match_criteria": ["Marketing", "SEO", "Ads"]
+  }
+]

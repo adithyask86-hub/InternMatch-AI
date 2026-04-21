@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'signup' %}Create Account{% else %}Sign In{% endif %} — InternMatch AI{% endblock %}
+{% block meta_desc %}Sign in or create your InternMatch AI account to discover AI-powered internship recommendations.{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <!-- Left Panel -->
+  <div class="auth-left">
+    <div class="auth-brand">
+      <div class="brand-logo-large">✦</div>
+      <h1 class="brand-title">InternMatch <span class="gradient-text">AI</span></h1>
+      <p class="brand-subtitle">Your AI-powered internship co-pilot. Upload your resume and let AI find your perfect match.</p>
+    </div>
+    <div class="auth-features">
+      <div class="feature-pill">
+        <span class="fp-icon">🧠</span>
+        <span>NLP Resume Parsing</span>
+      </div>
+      <div class="feature-pill">
+        <span class="fp-icon">🎯</span>
+        <span>Smart Match Scoring</span>
+      </div>
+      <div class="feature-pill">
+        <span class="fp-icon">💬</span>
+        <span>AI Chat Interface</span>
+      </div>
+      <div class="feature-pill">
+        <span class="fp-icon">📌</span>
+        <span>Bookmark & Track</span>
+      </div>
+    </div>
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+  </div>
+
+  <!-- Right Panel — Form -->
+  <div class="auth-right">
+    <div class="auth-card glass-card">
+      <div class="auth-card-header">
+        <div class="app-logo-small">
+          <div class="logo-icon-sm">✦</div>
+          <span>InternMatch AI</span>
+        </div>
+        <h2 class="auth-title">
+          {% if mode == 'signup' %}Create your account{% else %}Welcome back{% endif %}
+        </h2>
+        <p class="auth-desc">
+          {% if mode == 'signup' %}Join thousands of students finding their dream internship.{% else %}Sign in to continue your internship search.{% endif %}
+        </p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="auth-tabs">
+        <a href="{{ url_for('login') }}" class="auth-tab {% if mode == 'login' %}active{% endif %}" id="tab-login">Sign In</a>
+        <a href="{{ url_for('signup') }}" class="auth-tab {% if mode == 'signup' %}active{% endif %}" id="tab-signup">Sign Up</a>
+        <div class="auth-tab-indicator" style="transform: translateX({% if mode == 'signup' %}100%{% else %}0%{% endif %})"></div>
+      </div>
+
+      <!-- Form -->
+      <form method="POST" class="auth-form" id="auth-form" novalidate>
+        {% if mode == 'signup' %}
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name</label>
+          <div class="input-wrapper">
+            <span class="input-icon">◉</span>
+            <input type="text" id="name" name="name" class="form-input"
+                   placeholder="Adithya Kumar" required autocomplete="name" />
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉</span>
+            <input type="email" id="email" name="email" class="form-input"
+                   placeholder="you@university.edu" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">⬡</span>
+            <input type="password" id="password" name="password" class="form-input"
+                   placeholder="{% if mode == 'signup' %}At least 6 characters{% else %}Your password{% endif %}"
+                   required autocomplete="{% if mode == 'signup' %}new-password{% else %}current-password{% endif %}" />
+            <button type="button" class="input-icon-right password-toggle"
+                    onclick="togglePassword('password')" title="Show/hide password">👁</button>
+          </div>
+        </div>
+
+        {% if mode == 'signup' %}
+        <div class="form-group">
+          <label class="form-label" for="confirm_password">Confirm Password</label>
+          <div class="input-wrapper">
+            <span class="input-icon">⬡</span>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-input"
+                   placeholder="Re-enter your password" required autocomplete="new-password" />
+          </div>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary btn-full" id="auth-submit-btn">
+          <span class="btn-text">{% if mode == 'signup' %}Create Account{% else %}Sign In{% endif %}</span>
+          <span class="btn-loader hidden">⟳</span>
+        </button>
+      </form>
+
+      <p class="auth-switch">
+        {% if mode == 'login' %}
+          Don't have an account? <a href="{{ url_for('signup') }}">Sign up free</a>
+        {% else %}
+          Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePassword(id) {
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+document.getElementById("auth-form").addEventListener("submit", function () {
+  const btn = document.getElementById("auth-submit-btn");
+  btn.querySelector(".btn-text").classList.add("hidden");
+  btn.querySelector(".btn-loader").classList.remove("hidden");
+  btn.disabled = true;
+});
+</script>
+{% endblock %}

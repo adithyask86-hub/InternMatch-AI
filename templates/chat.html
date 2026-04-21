@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}AI Chat — InternMatch AI{% endblock %}
+
+{% block content %}
+<div class="chat-page" id="chat-page">
+
+  <!-- ── Chat Header ── -->
+  <div class="chat-header glass-card">
+    <div class="chat-agent-info">
+      <div class="agent-avatar">
+        <span class="agent-avatar-icon">✦</span>
+        <span class="agent-online-dot"></span>
+      </div>
+      <div>
+        <h2 class="agent-name">ADI <span class="ai-badge">AI</span></h2>
+        <p class="agent-status">Internship Intelligence Engine · Always Online</p>
+      </div>
+    </div>
+    <div class="chat-actions">
+      <button class="icon-btn" onclick="clearChat()" title="Clear chat">✕</button>
+      <a href="{{ url_for('results') }}" class="btn btn-outline btn-sm">Browse All →</a>
+    </div>
+  </div>
+
+  <!-- ── Message Feed ── -->
+  <div class="chat-feed" id="chat-feed">
+    <!-- Welcome message -->
+    <div class="msg msg-ai" id="welcome-msg">
+      <div class="msg-avatar">✦</div>
+      <div class="msg-content">
+        <div class="msg-bubble">
+          <p>Hi {{ user.name.split()[0] }}! 👋 I'm <strong>ADI</strong>, your AI internship advisor.</p>
+          <p class="mt-xs">I can help you find internships, explain requirements, and improve your profile. Try asking me:</p>
+          <div class="suggestion-chips-chat">
+            <button class="suggestion-chip-sm" onclick="sendSuggestion(this)">Find me AI internships</button>
+            <button class="suggestion-chip-sm" onclick="sendSuggestion(this)">Goldman Sachs finance roles</button>
+            <button class="suggestion-chip-sm" onclick="sendSuggestion(this)">Remote internships for beginners</button>
+            <button class="suggestion-chip-sm" onclick="sendSuggestion(this)">Best software engineering internships</button>
+          </div>
+        </div>
+        <span class="msg-time">Just now</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Input Bar ── -->
+  <div class="chat-input-area glass-card" id="chat-input-area">
+    <div class="chat-input-wrapper">
+      <textarea
+        id="chat-input"
+        class="chat-textarea"
+        placeholder="Ask me anything… e.g. 'Find Python internships at startups'"
+        rows="1"
+        onkeydown="handleChatKey(event)"
+        oninput="autoResize(this)"
+      ></textarea>
+      <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()" title="Send">
+        <span class="send-icon">↑</span>
+      </button>
+    </div>
+    <p class="chat-hint">Press <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line</p>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+// Pre-fill from dashboard quick search
+const prefill = sessionStorage.getItem("chat_prefill");
+if (prefill) {
+  document.getElementById("chat-input").value = prefill;
+  sessionStorage.removeItem("chat_prefill");
+  // Auto-send after short delay
+  setTimeout(() => sendMessage(), 400);
+}
+</script>
+{% endblock %}

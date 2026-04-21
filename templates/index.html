@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>InternMatch AI | Your Smart Future</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-box glass-card" style="background: rgba(255,255,255,0.85)">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <i class="fas fa-graduation-cap" style="font-size: 50px; color: #007AFF;"></i>
+                    <h1 style="color: #000; margin-top: 10px;">InternMatch AI</h1>
+                    <p style="color: #666;">Empowering your career with AI</p>
+                </div>
+                <input type="text" id="username" class="login-input" placeholder="Username">
+                <input type="password" id="password" class="login-input" placeholder="Password">
+                <button onclick="handleLogin()" class="btn-primary" style="width: 100%;">Sign In</button>
+                <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #666;">New here? <span style="color: #007AFF; font-weight: 600;">Create Account</span></p>
+            </div>
+        </div>
+
+        <!-- Home Dashboard -->
+        <div id="home-screen" class="screen">
+            <div class="nav-bar">
+                <h1 style="font-size: 28px;">Hello, <span id="display-name">User</span></h1>
+                <div onclick="toggleDarkMode()" style="font-size: 20px;"><i class="fas fa-moon"></i></div>
+            </div>
+            
+            <div class="glass-card">
+                <h2>Quick Overview</h2>
+                <div style="display: flex; justify-content: space-between;">
+                    <div style="text-align: center;">
+                        <p style="font-size: 24px; font-weight: 700; color: var(--ios-blue);">0</p>
+                        <p style="font-size: 12px;">Matches</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <p style="font-size: 24px; font-weight: 700; color: var(--ios-secondary);">0</p>
+                        <p style="font-size: 12px;">Applied</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <p style="font-size: 24px; font-weight: 700; color: var(--ios-green);">0</p>
+                        <p style="font-size: 12px;">Bookmarks</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="background: linear-gradient(135deg, rgba(0,122,255,0.1), rgba(88,86,214,0.1));">
+                <h2>Resume Score</h2>
+                <p>Upload your resume to see how you rank against top internships.</p>
+                <button onclick="switchScreen('resume-screen')" class="btn-primary" style="margin-top: 15px; padding: 10px 20px;">Get Started</button>
+            </div>
+
+            <h2>Top Recommendations</h2>
+            <div id="top-matches" style="flex-grow: 1; overflow-y: auto;">
+                <p style="text-align: center; margin-top: 20px;">No recommendations yet. Update your profile!</p>
+            </div>
+        </div>
+
+        <!-- Resume Upload Screen -->
+        <div id="resume-screen" class="screen">
+            <div class="nav-bar">
+                <i class="fas fa-chevron-left" onclick="switchScreen('home-screen')"></i>
+                <h2>Resume Lab</h2>
+                <div></div>
+            </div>
+            <div class="glass-card" style="text-align: center; padding: 40px 20px;">
+                <i class="fas fa-file-pdf" style="font-size: 60px; color: var(--ios-secondary); margin-bottom: 20px;"></i>
+                <h2>Upload CV</h2>
+                <p>We'll analyze your skills and match you instantly.</p>
+                <input type="file" id="resume-file" style="display: none;" onchange="handleResumeUpload(event)">
+                <button onclick="document.getElementById('resume-file').click()" class="btn-primary" style="margin-top: 20px;">Choose PDF File</button>
+            </div>
+            <div id="skills-cloud" class="glass-card" style="display: none;">
+                <h2>Extracted Skills</h2>
+                <div id="skills-list" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- AI Chat Screen -->
+        <div id="chat-screen" class="screen">
+            <div class="nav-bar">
+                <h2>AI Assistant</h2>
+            </div>
+            <div id="chat-messages" style="display: flex; flex-direction: column;">
+                <div class="message ai">Hi! I'm your InternMatch AI. Ask me anything about internships or your profile.</div>
+            </div>
+            <div class="glass-card" style="margin-top: auto; padding: 10px; display: flex; gap: 10px;">
+                <input type="text" id="chat-input" class="login-input" placeholder="Type a query..." style="margin-bottom: 0;">
+                <button onclick="handleChat()" class="btn-primary" style="padding: 10px 20px;"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="nav-bar">
+                <i class="fas fa-chevron-left" onclick="switchScreen('home-screen')"></i>
+                <h2>Opportunities</h2>
+            </div>
+            <div id="results-list" style="overflow-y: auto;">
+                <!-- Cards will be injected here -->
+            </div>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="tab-bar" id="bottom-tabs" style="display: none;">
+            <div class="tab-item active" onclick="switchScreen('home-screen')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </div>
+            <div class="tab-item" onclick="switchScreen('results-screen')">
+                <i class="fas fa-briefcase"></i>
+                <span>Jobs</span>
+            </div>
+            <div class="tab-item" onclick="switchScreen('chat-screen')">
+                <i class="fas fa-comment-dots"></i>
+                <span>AI Chat</span>
+            </div>
+            <div class="tab-item" onclick="switchScreen('resume-screen')">
+                <i class="fas fa-user-circle"></i>
+                <span>Profile</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
