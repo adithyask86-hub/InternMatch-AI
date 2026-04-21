@@ -11,7 +11,7 @@
     <div id="app">
         <!-- Login Screen -->
         <div id="login-screen" class="screen active">
-            <div class="login-box glass-card" style="background: rgba(255,255,255,0.85)">
+            <div class="login-box glass-card" style="background: rgba(255,255,255,0.9)">
                 <div style="text-align: center; margin-bottom: 30px;">
                     <i class="fas fa-graduation-cap" style="font-size: 50px; color: #007AFF;"></i>
                     <h1 style="color: #000; margin-top: 10px;">InternMatch AI</h1>
@@ -20,7 +20,6 @@
                 <input type="text" id="username" class="login-input" placeholder="Username">
                 <input type="password" id="password" class="login-input" placeholder="Password">
                 <button onclick="handleLogin()" class="btn-primary" style="width: 100%;">Sign In</button>
-                <p style="text-align: center; margin-top: 20px; font-size: 14px; color: #666;">New here? <span style="color: #007AFF; font-weight: 600;">Create Account</span></p>
             </div>
         </div>
 
@@ -35,15 +34,15 @@
                 <h2>Quick Overview</h2>
                 <div style="display: flex; justify-content: space-between;">
                     <div style="text-align: center;">
-                        <p style="font-size: 24px; font-weight: 700; color: var(--ios-blue);">0</p>
+                        <p id="match-count" style="font-size: 24px; font-weight: 700; color: #007AFF;">0</p>
                         <p style="font-size: 12px;">Matches</p>
                     </div>
                     <div style="text-align: center;">
-                        <p style="font-size: 24px; font-weight: 700; color: var(--ios-secondary);">0</p>
+                        <p id="applied-count" style="font-size: 24px; font-weight: 700; color: #8E8E93;">0</p>
                         <p style="font-size: 12px;">Applied</p>
                     </div>
                     <div style="text-align: center;">
-                        <p style="font-size: 24px; font-weight: 700; color: var(--ios-green);">0</p>
+                        <p id="bookmark-count" style="font-size: 24px; font-weight: 700; color: #34C759;">0</p>
                         <p style="font-size: 12px;">Bookmarks</p>
                     </div>
                 </div>
@@ -55,21 +54,21 @@
                 <button onclick="switchScreen('resume-screen')" class="btn-primary" style="margin-top: 15px; padding: 10px 20px;">Get Started</button>
             </div>
 
-            <h2>Top Recommendations</h2>
-            <div id="top-matches" style="flex-grow: 1; overflow-y: auto;">
-                <p style="text-align: center; margin-top: 20px;">No recommendations yet. Update your profile!</p>
+            <h2 style="margin-top: 10px;">Top Recommendations</h2>
+            <div id="top-matches" style="flex-grow: 1;">
+                <!-- recommendations injected here -->
             </div>
         </div>
 
-        <!-- Resume Upload Screen -->
+        <!-- Resume / Profile Screen -->
         <div id="resume-screen" class="screen">
             <div class="nav-bar">
                 <i class="fas fa-chevron-left" onclick="switchScreen('home-screen')"></i>
                 <h2>Resume Lab</h2>
                 <div></div>
             </div>
-            <div class="glass-card" style="text-align: center; padding: 40px 20px;">
-                <i class="fas fa-file-pdf" style="font-size: 60px; color: var(--ios-secondary); margin-bottom: 20px;"></i>
+            <div class="glass-card" style="text-align: center; padding: 30px 20px;">
+                <i class="fas fa-file-pdf" style="font-size: 60px; color: #8E8E93; margin-bottom: 20px;"></i>
                 <h2>Upload CV</h2>
                 <p>We'll analyze your skills and match you instantly.</p>
                 <input type="file" id="resume-file" style="display: none;" onchange="handleResumeUpload(event)">
@@ -86,26 +85,29 @@
             <div class="nav-bar">
                 <h2>AI Assistant</h2>
             </div>
-            <div id="chat-messages" style="display: flex; flex-direction: column;">
-                <div class="message ai">Hi! I'm your InternMatch AI. Ask me anything about internships or your profile.</div>
+            <div id="chat-messages" style="flex-grow: 1; overflow-y: auto; padding-bottom: 20px;">
+                <div class="message ai" style="background: rgba(0,0,0,0.05); padding: 12px; border-radius: 15px; margin: 10px; max-width: 80%;">
+                    Hi! I'm your InternMatch AI. Ask me about roles like "Software" or "Finance"!
+                </div>
             </div>
-            <div class="glass-card" style="margin-top: auto; padding: 10px; display: flex; gap: 10px;">
-                <input type="text" id="chat-input" class="login-input" placeholder="Type a query..." style="margin-bottom: 0;">
+            <div class="glass-card" style="display: flex; gap: 10px; margin-top: 10px; padding: 10px;">
+                <input type="text" id="chat-input" class="login-input" placeholder="Ask AI Assistant..." style="margin-bottom: 0;">
                 <button onclick="handleChat()" class="btn-primary" style="padding: 10px 20px;"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
 
-        <!-- Results Screen -->
+        <!-- Results / Jobs Screen -->
         <div id="results-screen" class="screen">
             <div class="nav-bar">
-                <i class="fas fa-chevron-left" onclick="switchScreen('home-screen')"></i>
                 <h2>Opportunities</h2>
             </div>
-            <div id="results-list" style="overflow-y: auto;">
+            <div id="results-list" style="flex-grow: 1; overflow-y: auto;">
                 <!-- Cards will be injected here -->
             </div>
         </div>
 
+        <!-- Tab Bar (Pinned to bottom) -->
+        <div class="tab-bar" id="bottom-tabs">
             <div class="tab-item active" onclick="switchScreen('home-screen')">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
