@@ -1,39 +1,19 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import List, Optional
 
-class UserBase(BaseModel):
+class UserProfile(BaseModel):
     username: str
-    email: EmailStr
+    skills: List[str] = []
 
-class UserCreate(UserBase):
-    password: str
-
-class UserProfile(UserBase):
-    id: int
-    skills: List[str]
-    experience: Optional[str] = None
-    education: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
-class Internship(BaseModel):
+class InternshipSchema(BaseModel):
     id: int
     title: str
     company: str
     location: str
-    category: str
     description: str
     skills: List[str]
-    eligibility: str
-    benefits: str
-    match_score: Optional[float] = 0.0
+    match_score: float
     suggestions: Optional[List[str]] = []
 
-class ChatMessage(BaseModel):
+class ChatRequest(BaseModel):
     message: str
-
-class ChatResponse(BaseModel):
-    response: str
-    matches: Optional[List[Internship]] = []
-    suggestions: Optional[List[str]] = []
