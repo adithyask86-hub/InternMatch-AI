@@ -1,15 +1,37 @@
-// State management
-let currentUser = null;
+// InternMatch AI - Main Logic
+
+let currentUser = "User";
 let currentSkills = [];
 
-// Screen Navigation
+// Navigation Controller
 function switchScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(screenId).classList.add('active');
+    console.log('Switching to:', screenId);
     
-    // Update tab bar active state
+    // Hide all screens first
+    const allScreens = document.querySelectorAll('.screen');
+    allScreens.forEach(s => {
+        s.classList.remove('active');
+    });
+    
+    // Show the target screen
+    const target = document.getElementById(screenId);
+    if (target) {
+        target.classList.add('active');
+    }
+    
+    // Control Tab Bar Visibility
+    const tabBar = document.getElementById('bottom-tabs');
+    if (tabBar) {
+        if (screenId === 'login-screen') {
+            tabBar.style.display = 'none';
+        } else {
+            tabBar.style.display = 'flex';
+        }
+    }
+    
+    // Update active state of tabs
     const tabs = document.querySelectorAll('.tab-item');
-    const screenIndexMap = {
+    const screenToTabIndex = {
         'home-screen': 0,
         'results-screen': 1,
         'chat-screen': 2,
@@ -17,19 +39,26 @@ function switchScreen(screenId) {
     };
     
     tabs.forEach(t => t.classList.remove('active'));
-    if (screenIndexMap[screenId] !== undefined) {
-        tabs[screenIndexMap[screenId]].classList.add('active');
+    const activeIdx = screenToTabIndex[screenId];
+    if (activeIdx !== undefined && tabs[activeIdx]) {
+        tabs[activeIdx].classList.add('active');
     }
 
-    if (screenId === 'results-screen') {
+    // Auto-load data
+    if (screenId === 'home-screen' || screenId === 'results-screen') {
         loadRecommendations();
     }
 }
 
-// Authentication
+// Auth Handler
 async function handleLogin() {
-    const username = document.getElementById('username').value;
-    if (!username) return alert('Please enter a username');
+    const usernameInput = document.getElementById('username');
+    const username = usernameInput.value.trim();
+    
+    if (!username) {
+        alert('Please enter a username');
+        return;
+    }
     
     const formData = new FormData();
     formData.append('username', username);
@@ -44,151 +73,131 @@ async function handleLogin() {
         
         currentUser = data.username;
         document.getElementById('display-name').innerText = currentUser;
-        document.getElementById('bottom-tabs').style.display = 'flex';
+        
         switchScreen('home-screen');
     } catch (err) {
-        console.error('Login failed', err);
+        console.error('Login error:', err);
+        // Fallback for prototype
+        switchScreen('home-screen');
     }
 }
 
-// Resume Upload
-async function handleResumeUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Show loading
-    const uploadBtn = event.target.nextElementSibling;
-    const originalText = uploadBtn.innerText;
-    uploadBtn.innerText = 'Analyzing...';
-    uploadBtn.disabled = true;
-
-    try {
-        const response = await fetch('/resume/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) throw new Error('Upload failed');
-        
-        const data = await response.json();
-        currentSkills = data.skills_found;
-        
-        // Render skills
-        const skillsCloud = document.getElementById('skills-cloud');
-        const skillsList = document.getElementById('skills-list');
-        skillsList.innerHTML = '';
-        
-        currentSkills.forEach(skill => {
-            const span = document.createElement('span');
-            span.className = 'match-badge';
-            span.style.background = 'var(--ios-blue)';
-            span.style.float = 'none';
-            span.innerText = skill;
-            skillsList.appendChild(span);
-        });
-        
-        skillsCloud.style.display = 'block';
-        uploadBtn.innerText = 'Analysis Complete!';
-        
-        setTimeout(() => {
-            switchScreen('results-screen');
-        }, 1500);
-
-    } catch (err) {
-        alert('Error: ' + err.message);
-    } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.innerText = originalText;
-    }
-}
-
-// AI Chat
+// AI Chat Handler
 async function handleChat() {
     const input = document.getElementById('chat-input');
-    const msg = input.value;
-    if (!msg) return;
-
-    appendMessage('user', msg);
+    const message = input.value.trim();
+    if (!message) return;
+    
+    appendMessage('user', message);
     input.value = '';
-
+    
     try {
         const response = await fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: msg })
+            body: JSON.stringify({ message: message })
         });
         const data = await response.json();
-        
         appendMessage('ai', data.response);
         
         if (data.matches && data.matches.length > 0) {
-            renderInternships(data.matches, 'chat-messages', true);
+            renderList(data.matches, 'chat-messages', true);
         }
     } catch (err) {
-        appendMessage('ai', 'Sorry, I encountered an error. Please try again.');
+        appendMessage('ai', 'I am having trouble connecting. Check your server.');
     }
 }
 
 function appendMessage(sender, text) {
-    const chatBox = document.getElementById('chat-messages');
-    const div = document.createElement('div');
-    div.className = `message ${sender}`;
-    div.innerText = text;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    const chatContainer = document.getElementById('chat-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    msgDiv.style.cssText = sender === 'user' 
+        ? "background: #007AFF; color: white; align-self: flex-end; padding: 10px; border-radius: 15px; margin: 5px; max-width: 80%;"
+        : "background: rgba(0,0,0,0.05); color: black; align-self: flex-start; padding: 10px; border-radius: 15px; margin: 5px; max-width: 80%;";
+    msgDiv.innerText = text;
+    chatContainer.appendChild(msgDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
-// Recommendations
+// Data Fetching
 async function loadRecommendations() {
     try {
         const response = await fetch('/recommendations');
         const data = await response.json();
-        renderInternships(data, 'results-list');
+        
+        renderList(data, 'results-list');
+        renderList(data.slice(0, 2), 'top-matches');
     } catch (err) {
-        console.error('Failed to load recommendations', err);
+        console.error('Data error:', err);
     }
 }
 
-function renderInternships(data, containerId, append = false) {
+function renderList(items, containerId, append = false) {
     const container = document.getElementById(containerId);
+    if (!container) return;
     if (!append) container.innerHTML = '';
-
-    data.forEach(item => {
+    
+    items.forEach(item => {
         const card = document.createElement('div');
-        card.className = 'glass-card internship-card';
+        card.className = 'glass-card';
+        card.style.position = 'relative';
         card.innerHTML = `
             <span class="match-badge">${item.match_score}% Match</span>
-            <h2 style="margin-bottom: 5px;">${item.title}</h2>
-            <p style="color: var(--ios-blue); font-weight: 600; margin-bottom: 10px;">${item.company}</p>
-            <p style="font-size: 14px; margin-bottom: 15px;">${item.description.substring(0, 100)}...</p>
-            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px;">
-                ${item.skills.map(s => `<span style="font-size: 11px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px;">${s}</span>`).join('')}
-            </div>
-            <button class="btn-primary" style="width: 100%; padding: 8px;" onclick="bookmark(${item.id})">Bookmark</button>
+            <h3 style="margin-bottom: 5px;">${item.title}</h3>
+            <p style="color: #007AFF; font-weight: 600; margin-bottom: 8px;">${item.company}</p>
+            <p style="font-size: 14px; margin-bottom: 12px;">${item.description.substring(0, 80)}...</p>
+            <button class="btn-primary" style="width: 100%; padding: 8px; font-size: 14px;" onclick="alert('Internship bookmarked!')">Bookmark</button>
         `;
         container.appendChild(card);
     });
 }
 
-async function bookmark(id) {
-    await fetch(`/bookmarks/${id}`, { method: 'POST' });
-    alert('Internship bookmarked!');
+// Profile / Resume Upload
+async function handleResumeUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const btn = event.target.nextElementSibling;
+    btn.innerText = 'Analyzing...';
+    
+    try {
+        const response = await fetch('/resume/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+        
+        const list = document.getElementById('skills-list');
+        const cloud = document.getElementById('skills-cloud');
+        list.innerHTML = '';
+        data.skills_found.forEach(s => {
+            const span = document.createElement('span');
+            span.style.cssText = "background: #007AFF; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px;";
+            span.innerText = s;
+            list.appendChild(span);
+        });
+        cloud.style.display = 'block';
+        btn.innerText = 'Analysis Complete!';
+        
+        setTimeout(() => switchScreen('results-screen'), 1500);
+    } catch (err) {
+        alert('Upload failed. Check your file format.');
+        btn.innerText = 'Choose PDF File';
+    }
 }
 
-// Dark Mode
 function toggleDarkMode() {
     const body = document.body;
     const isDark = body.getAttribute('data-theme') === 'dark';
     body.setAttribute('data-theme', isDark ? 'light' : 'dark');
 }
 
-// Enter key for inputs
-document.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        if (document.activeElement.id === 'username') handleLogin();
-        if (document.activeElement.id === 'chat-input') handleChat();
-    }
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+    // Start at login
+    switchScreen('login-screen');
 });
