@@ -1,28 +1,21 @@
-// InternMatch AI - Core Logic
-
+// InternMatch AI - Perfect Master Logic
 let currentUser = "User";
 let currentSkills = [];
 let bookmarks = 0;
 
-// 1. Navigation Logic
+// 1. Navigation
 function switchScreen(screenId) {
-    console.log('Navigating to:', screenId);
-    
-    // Deactivate all screens
     const screens = document.querySelectorAll('.screen');
     screens.forEach(s => s.classList.remove('active'));
     
-    // Activate target
     const target = document.getElementById(screenId);
     if (target) target.classList.add('active');
     
-    // Show/Hide bottom tabs
     const tabBar = document.getElementById('bottom-tabs');
     if (tabBar) {
         tabBar.style.display = (screenId === 'login-screen') ? 'none' : 'flex';
     }
     
-    // Update active tab style
     const tabs = document.querySelectorAll('.tab-item');
     const screenIndexMap = {
         'home-screen': 0,
@@ -37,7 +30,6 @@ function switchScreen(screenId) {
         tabs[idx].classList.add('active');
     }
 
-    // Refresh data for relevant screens
     if (screenId === 'home-screen' || screenId === 'results-screen') {
         loadRecommendations();
     }
@@ -62,7 +54,7 @@ async function handleLogin() {
         document.getElementById('display-name').innerText = currentUser;
         switchScreen('home-screen');
     } catch (err) {
-        switchScreen('home-screen'); // Fallback
+        switchScreen('home-screen');
     }
 }
 
@@ -72,11 +64,9 @@ async function loadRecommendations() {
         const response = await fetch('/recommendations');
         const data = await response.json();
         
-        // Update "Matches" counter on home screen
         const matchCounter = document.getElementById('match-count');
         if (matchCounter) matchCounter.innerText = data.length;
         
-        // Render to Jobs screen and Home screen
         renderInternships(data, 'results-list');
         renderInternships(data.slice(0, 3), 'top-matches');
     } catch (err) {
@@ -84,35 +74,38 @@ async function loadRecommendations() {
     }
 }
 
-function renderInternships(data, containerId) {
+function renderInternships(data, containerId, append = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    container.innerHTML = '';
+    if (!append) container.innerHTML = '';
 
     data.forEach(item => {
         const card = document.createElement('div');
         card.className = 'glass-card internship-card';
-        card.style.position = 'relative';
+        card.style.cssText = "position: relative; margin-top: 15px; width: 100%; border: 1px solid rgba(0,0,0,0.08); display: block;";
         card.innerHTML = `
             <span class="match-badge">${item.match_score}% Match</span>
-            <h3 style="margin-bottom: 5px;">${item.title}</h3>
-            <p style="color: #007AFF; font-weight: 600; font-size: 14px;">${item.company}</p>
-            <p style="font-size: 13px; margin: 10px 0; color: #666;">${item.description.substring(0, 70)}...</p>
-            <button onclick="addBookmark(this, ${item.id})" class="btn-primary" style="width: 100%; padding: 8px; font-size: 13px;">Bookmark</button>
+            <h3 style="margin-bottom: 5px; font-size: 16px;">${item.title}</h3>
+            <p style="color: #007AFF; font-weight: 600; font-size: 13px;">${item.company}</p>
+            <p style="font-size: 12px; margin: 8px 0; color: #444;">${item.description.substring(0, 70)}...</p>
+            <button onclick="addBookmark(this, ${item.id})" class="btn-primary" style="width: 100%; padding: 10px; font-size: 12px; margin-top: 5px;">Bookmark</button>
         `;
         container.appendChild(card);
     });
+    
+    if (append) {
+        container.scrollTop = container.scrollHeight;
+    }
 }
 
 function addBookmark(btn, id) {
     bookmarks++;
-    document.getElementById('bookmark-count').innerText = bookmarks;
-    btn.innerText = 'Bookmarked! ✅';
+    const counter = document.getElementById('bookmark-count');
+    if (counter) counter.innerText = bookmarks;
+    btn.innerText = 'Saved! ✅';
     btn.style.background = '#34C759';
     btn.disabled = true;
-    
-    // Optional: send to server
-    fetch(`/bookmarks/${id}`, { method: 'POST' });
+    fetch(`/bookmarks/${id}`, { method: 'POST' }).catch(e => {});
 }
 
 // 4. Resume Upload
@@ -121,7 +114,7 @@ async function handleResumeUpload(event) {
     if (!file) return;
 
     const btn = event.target.nextElementSibling;
-    btn.innerText = 'Analyzing AI Profile...';
+    btn.innerText = 'AI is Analyzing...';
     
     const formData = new FormData();
     formData.append('file', file);
@@ -145,7 +138,7 @@ async function handleResumeUpload(event) {
         });
         
         btn.innerText = 'Analysis Complete!';
-        setTimeout(() => switchScreen('results-screen'), 1500);
+        setTimeout(() => switchScreen('results-screen'), 1200);
     } catch (err) {
         alert('Upload Error');
         btn.innerText = 'Choose PDF File';
@@ -168,13 +161,18 @@ async function handleChat() {
             body: JSON.stringify({ message: msg })
         });
         const data = await response.json();
+        
+        // Show AI's text response
         displayMessage('ai', data.response);
         
+        // SHOW THE JOBS - THIS IS THE CRITICAL PART
         if (data.matches && data.matches.length > 0) {
-            renderInternships(data.slice(0, 2), 'chat-messages');
+            console.log('Rendering chat matches:', data.matches);
+            renderInternships(data.matches.slice(0, 5), 'chat-messages', true);
         }
     } catch (err) {
-        displayMessage('ai', 'Error connecting to AI server.');
+        console.error('Chat error:', err);
+        displayMessage('ai', 'Something went wrong with the AI server.');
     }
 }
 
@@ -182,8 +180,8 @@ function displayMessage(sender, text) {
     const container = document.getElementById('chat-messages');
     const div = document.createElement('div');
     div.style.cssText = sender === 'user' 
-        ? "background: #007AFF; color: white; align-self: flex-end; padding: 10px 15px; border-radius: 18px; margin: 8px; max-width: 80%; font-size: 15px;"
-        : "background: rgba(0,0,0,0.05); color: black; align-self: flex-start; padding: 10px 15px; border-radius: 18px; margin: 8px; max-width: 80%; font-size: 15px;";
+        ? "background: #007AFF; color: white; align-self: flex-end; padding: 10px 15px; border-radius: 18px; margin: 8px; max-width: 80%; font-size: 15px; display: inline-block;"
+        : "background: rgba(0,0,0,0.05); color: black; align-self: flex-start; padding: 10px 15px; border-radius: 18px; margin: 8px; max-width: 80%; font-size: 15px; display: inline-block;";
     div.innerText = text;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
@@ -198,4 +196,12 @@ function toggleDarkMode() {
 // Init
 document.addEventListener('DOMContentLoaded', () => {
     switchScreen('login-screen');
+    
+    // Allow enter key for chat
+    const chatInp = document.getElementById('chat-input');
+    if (chatInp) {
+        chatInp.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleChat();
+        });
+    }
 });
